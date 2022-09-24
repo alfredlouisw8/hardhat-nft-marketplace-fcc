@@ -6,7 +6,7 @@ const {
 } = require("../helper-hardhat-config")
 require("dotenv").config()
 const fs = require("fs")
-const { network } = require("hardhat")
+const { network, ethers } = require("hardhat")
 
 module.exports = async () => {
     if (process.env.UPDATE_FRONT_END) {
@@ -42,13 +42,25 @@ async function updateAbi() {
 async function updateContractAddresses() {
     const chainId = network.config.chainId.toString()
     const nftMarketplace = await ethers.getContract("NftMarketplace")
-    const contractAddresses = JSON.parse(fs.readFileSync(frontEndContractsFile, "utf8"))
+    const basicNft = await ethers.getContract("BasicNft")
+    const basicNft2 = await ethers.getContract("BasicNftTwo")
+    const contractAddresses = JSON.parse(fs.readFileSync(frontEndContractsFile2, "utf8"))
     if (chainId in contractAddresses) {
-        if (!contractAddresses[chainId]["NftMarketplace"].includes(nftMarketplace.address)) {
-            contractAddresses[chainId]["NftMarketplace"].push(nftMarketplace.address)
+        if (!contractAddresses[chainId]["NftMarketplace"] == nftMarketplace.address) {
+            contractAddresses[chainId]["NftMarketplace"] = nftMarketplace.address
+        }
+        if (!contractAddresses[chainId]["BasicNft"] == basicNft.address) {
+            contractAddresses[chainId]["BasicNft"] = basicNft.address
+        }
+        if (!contractAddresses[chainId]["BasicNftTwo"] == basicNft2.address) {
+            contractAddresses[chainId]["BasicNftTwo"] = basicNft2.address
         }
     } else {
-        contractAddresses[chainId] = { NftMarketplace: [nftMarketplace.address] }
+        contractAddresses[chainId] = {
+            NftMarketplace: nftMarketplace.address,
+            BasicNft: basicNft.address,
+            BasicNftTwo: basicNft2.address,
+        }
     }
     fs.writeFileSync(frontEndContractsFile, JSON.stringify(contractAddresses))
     fs.writeFileSync(frontEndContractsFile2, JSON.stringify(contractAddresses))
